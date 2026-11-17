@@ -6,8 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Hybrid Coach">
-  <!-- Strava/Garmin App-Icon -->
-  <title>Hybrid Coach – Performance</title>
+  <title>Hybrid Coach</title>
   <style>
     :root {
       --bg: #0d0e11;
@@ -16,52 +15,202 @@
       --text: #ffffff;
       --muted: #9ca3af;
       --strava: #fc4c02;
-      --strava-glow: rgba(252, 76, 2, 0.18);
-      --garmin-blue: #00a8e8;
+      --garmin: #00a8e8;
       --green: #10b981;
       --border: #2a2e39;
     }
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { margin: 0; padding: 18px 16px 48px; background: var(--bg); color: var(--text); line-height: 1.4; }
-    
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    h1 { font-size: 1.45rem; font-weight: 800; letter-spacing: -0.02em; margin: 0; text-transform: uppercase; }
+    h1 { font-size: 1.45rem; font-weight: 800; margin: 0; text-transform: uppercase; }
     h1 span { color: var(--strava); }
-    .subtitle { color: var(--muted); font-size: 0.8rem; margin-top: 2px; font-weight: 500; }
-    
+    .subtitle { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
     h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 12px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.35); }
-    
-    /* Countdown Kacheln */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 14px; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
     .stat-box { background: var(--card); border: 1px solid var(--border); border-top: 3px solid var(--strava); padding: 12px 10px; border-radius: 14px; text-align: center; }
-    .stat-box.garmin { border-top-color: var(--garmin-blue); }
-    .stat-val { font-size: 1.75rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text); line-height: 1.1; }
+    .stat-box.garmin { border-top-color: var(--garmin); }
+    .stat-val { font-size: 1.75rem; font-weight: 800; color: var(--text); }
     .stat-lbl { font-size: 0.72rem; color: var(--muted); margin-top: 4px; font-weight: 600; text-transform: uppercase; }
-
-    /* Progress Bar */
     .progress-wrap { margin-bottom: 14px; }
     .progress-header { display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 600; margin-bottom: 6px; color: var(--muted); }
     .progress-bar { width: 100%; height: 8px; background: var(--card-inner); border-radius: 99px; overflow: hidden; }
-    .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--strava), #ff7b39); border-radius: 99px; transition: width 0.35s ease; }
-
-    /* Tasks */
-    .task { display: flex; align-items: flex-start; gap: 12px; padding: 12px; margin-bottom: 8px; background: var(--card-inner); border-radius: 12px; border: 1px solid transparent; cursor: pointer; transition: all 0.2s; }
+    .progress-fill { height: 100%; width: 0%; background: var(--strava); border-radius: 99px; transition: width 0.3s ease; }
+    .task { display: flex; align-items: flex-start; gap: 12px; padding: 12px; margin-bottom: 8px; background: var(--card-inner); border-radius: 12px; cursor: pointer; }
     .task:last-child { margin-bottom: 0; }
-    .task.done { opacity: 0.55; border-color: rgba(16, 185, 129, 0.3); }
+    .task.done { opacity: 0.55; }
     .task.done span { text-decoration: line-through; color: var(--muted); }
-    .task input[type="checkbox"] { appearance: none; -webkit-appearance: none; width: 22px; height: 22px; border: 2px solid var(--strava); border-radius: 6px; margin-top: 1px; flex-shrink: 0; display: grid; place-content: center; background: transparent; }
-    .task input[type="checkbox"]:checked { background: var(--green); border-color: var(--green); }
-    .task input[type="checkbox"]:checked::before { content: "✓"; color: #052e16; font-weight: 900; font-size: 14px; }
+    .task input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--green); margin-top: 2px; flex-shrink: 0; }
     .task span { font-size: 0.9rem; font-weight: 500; }
-
-    /* Garmin Zonen mit Farbbalken */
-    .zone-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.83rem; padding: 8px 10px; background: var(--card-inner); border-radius: 8px; margin-bottom: 6px; border-left: 4px solid var(--garmin-blue); }
+    .zone-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.83rem; padding: 8px 10px; background: var(--card-inner); border-radius: 8px; margin-bottom: 6px; border-left: 4px solid var(--garmin); }
     .zone-row:last-child { margin-bottom: 0; }
     .zone-row.z-mp { border-left-color: var(--green); }
     .zone-row.z-th { border-left-color: #f59e0b; }
     .zone-row.z-vo2 { border-left-color: var(--strava); }
-    .zone-row strong { font-variant-numeric: tabular-nums; color: var(--text); }
+    textarea { width: 100%; background: var(--card-inner); color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: 12px; font-size: 0.92rem; resize: vertical; min-height: 85px; }
+    .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 0.92rem; font-weight: 700; cursor: pointer; margin-top: 10px; }
+    .btn-primary { background: var(--strava); color: #ffffff; }
+    .btn-secondary { background: var(--card-inner); color: var(--muted); border: 1px solid var(--border); font-size: 0.82rem; padding: 10px; }
+    .badge { font-size: 0.68rem; font-weight: 700; background: rgba(252, 76, 2, 0.18); color: var(--strava); padding: 3px 8px; border-radius: 6px; text-transform: uppercase; }
+    .badge.garmin { background: rgba(0, 168, 232, 0.15); color: var(--garmin); }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--strava); color: #ffffff; font-weight: 700; padding: 12px 20px; border-radius: 99px; font-size: 0.85rem; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 99; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
 
-    /* Inputs & Buttons */
-    textarea
+  <div class="header">
+    <div>
+      <h1>Hybrid <span>Coach</span></h1>
+      <div class="subtitle">Marathon 4:30-4:45/km • Hyrox Sub 60</div>
+    </div>
+    <span class="badge garmin">VO2max 52</span>
+  </div>
+
+  <div class="grid-2">
+    <div class="stat-box">
+      <div class="stat-val" id="days-marathon">--</div>
+      <div class="stat-lbl">Tage • Marathon 14.03.</div>
+    </div>
+    <div class="stat-box garmin">
+      <div class="stat-val" id="days-hyrox">--</div>
+      <div class="stat-lbl">Tage • Hyrox 08.04.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Trainingsplan <span class="badge">KW 47</span></h2>
+    <div class="progress-wrap">
+      <div class="progress-header">
+        <span>Wochenfortschritt</span>
+        <span id="progress-text">0 / 4 erledigt</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+    <div id="task-list"></div>
+    <button class="btn btn-secondary" onclick="toggleEditPlan()">Plan bearbeiten / KI-Update einfügen</button>
+    <div id="edit-plan-box" style="display:none; margin-top:10px;">
+      <textarea id="plan-input" placeholder="Jede Einheit in eine neue Zeile schreiben..."></textarea>
+      <button class="btn btn-primary" onclick="saveNewPlan()">Neuen Plan speichern</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Athleten-Log <span class="badge">iPhone Mikrofon</span></h2>
+    <textarea id="feedback-note" placeholder="Tippe hier und nutze das Mikrofon auf deiner iPhone-Tastatur..."></textarea>
+    <button class="btn btn-primary" onclick="copyForAI()">Für KI-Coach kopieren (Prompt + Status)</button>
+  </div>
+
+  <div class="card">
+    <h2>Garmin Pace-Zonen <span class="badge garmin">Schwelle 4:43/km</span></h2>
+    <div class="zone-row"><span>Z2 Locker / Jogger</span><strong>5:35 - 6:15 /km (&lt;148 bpm)</strong></div>
+    <div class="zone-row z-mp"><span>Marathon-Zielpace</span><strong>4:40 - 4:45 /km (158-166)</strong></div>
+    <div class="zone-row z-th"><span>Laktatschwelle</span><strong>4:30 - 4:42 /km (170-176)</strong></div>
+    <div class="zone-row z-vo2"><span>VO2max / Hyrox</span><strong>4:05 - 4:20 /km (&gt;177 bpm)</strong></div>
+  </div>
+
+  <div class="toast" id="toast">Kopiert! Jetzt in Claude/Gemini einfügen.</div>
+
+  <script>
+    const defaultTasks = [
+      { text: "Mo (morgens): CrossFit (USC) - Technik & Kraft, Beine moderat", done: false },
+      { text: "Mi/Do (morgens): 15' Einlaufen + 3x8' Schwelle (4:35-4:43/km) + 10' Auslaufen", done: false },
+      { text: "Fr (optional): 35-45' locker / Jogger-Buggy (<145 bpm)", done: false },
+      { text: "Sa/So: Long Run 15-16 km @ 5:45-6:05/km (<150 bpm)", done: false }
+    ];
+
+    let state = JSON.parse(localStorage.getItem('hybridCoachState')) || {
+      tasks: defaultTasks,
+      note: ""
+    };
+
+    function updateCountdowns() {
+      const now = new Date();
+      const marathon = new Date('2027-03-14T09:00:00');
+      const hyrox = new Date('2027-04-08T09:00:00');
+      const dM = Math.max(0, Math.ceil((marathon - now) / (1000 * 60 * 60 * 24)));
+      const dH = Math.max(0, Math.ceil((hyrox - now) / (1000 * 60 * 60 * 24)));
+      document.getElementById('days-marathon').innerText = dM;
+      document.getElementById('days-hyrox').innerText = dH;
+    }
+
+    function updateProgress() {
+      const total = state.tasks.length;
+      const doneCount = state.tasks.filter(t => t.done).length;
+      const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+      document.getElementById('progress-fill').style.width = pct + '%';
+      document.getElementById('progress-text').innerText = doneCount + ' / ' + total + ' erledigt';
+    }
+
+    function renderTasks() {
+      const list = document.getElementById('task-list');
+      list.innerHTML = '';
+      state.tasks.forEach((t, idx) => {
+        const div = document.createElement('div');
+        div.className = 'task' + (t.done ? ' done' : '');
+        div.innerHTML = '<input type="checkbox" ' + (t.done ? 'checked' : '') + '><span>' + t.text + '</span>';
+        div.onclick = (e) => {
+          if (e.target.tagName !== 'INPUT') {
+            state.tasks[idx].done = !state.tasks[idx].done;
+          } else {
+            state.tasks[idx].done = e.target.checked;
+          }
+          saveState();
+          renderTasks();
+        };
+        list.appendChild(div);
+      });
+      updateProgress();
+    }
+
+    function saveState() {
+      state.note = document.getElementById('feedback-note').value;
+      localStorage.setItem('hybridCoachState', JSON.stringify(state));
+    }
+
+    function toggleEditPlan() {
+      const box = document.getElementById('edit-plan-box');
+      const isHidden = box.style.display === 'none';
+      box.style.display = isHidden ? 'block' : 'none';
+      if (isHidden) {
+        document.getElementById('plan-input').value = state.tasks.map(t => t.text).join('\n');
+      }
+    }
+
+    function saveNewPlan() {
+      const lines = document.getElementById('plan-input').value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      if (lines.length > 0) {
+        state.tasks = lines.map(line => ({ text: line, done: false }));
+        saveState();
+        renderTasks();
+        document.getElementById('edit-plan-box').style.display = 'none';
+        showToast("Neuer Wochenplan gespeichert!");
+      }
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    function copyForAI() {
+      saveState();
+      const tasksSummary = state.tasks.map(t => '- [' + (t.done ? 'x' : ' ') + '] ' + t.text).join('\n');
+      const promptText = '# ROLLE & ZIEL\nDu bist mein pragmatischer Ausdauer- & Hybrid-Coach.\n- Ziel 1: Marathon am 14.03. (Pace 4:30-4:45/km)\n- Ziel 2: Hyrox Double am 08.04. (Sub 60 Min.)\n- Alltag: Elternteil, 3-4 Einheiten/Woche (3x morgens 60 Min. vor Arbeit, Mo=CrossFit USC Köln, WE=Long Run, optional abends Jogger-Buggy).\n- Garmin-Basis: VO2max 52, Laktatschwelle 4:43/km @ 175 bpm.\n\n# AKTUELLER STATUS & WOCHENPLAN\n' + tasksSummary + '\n\n# MEIN AKTUELLES FEEDBACK / LOG\n' + (state.note || "Keine besonderen Vorkommnisse.") + '\n\n# AUFGABE\nAnalysiere meinen Status kurz und pragmatisch (kein Schuldgefühl-Coaching). Passe bei Bedarf die restliche Woche an oder gib mir den Plan für nächste Woche als einfache Liste (eine Einheit pro Zeile, damit ich sie direkt in meine App kopieren kann).';
+
+      navigator.clipboard.writeText(promptText).then(() => {
+        showToast("Kopiert! Jetzt in Claude/Gemini einfügen.");
+      });
+    }
+
+    document.getElementById('feedback-note').value = state.note || "";
+    document.getElementById('feedback-note').addEventListener('input', saveState);
+    updateCountdowns();
+    renderTasks();
+  </script>
+</body>
+</html>
