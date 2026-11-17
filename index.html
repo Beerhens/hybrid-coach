@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Hybrid Coach">
-  <title>Hybrid Coach</title>
+  <title>Hybrid Coach – Performance</title>
   <style>
     :root {
       --bg: #0d0e11;
@@ -17,19 +17,24 @@
       --strava: #fc4c02;
       --garmin: #00a8e8;
       --green: #10b981;
+      --purple: #a855f7;
       --border: #2a2e39;
     }
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { margin: 0; padding: 18px 16px 48px; background: var(--bg); color: var(--text); line-height: 1.4; }
+    body { margin: 0; padding: 18px 16px 54px; background: var(--bg); color: var(--text); line-height: 1.4; }
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
     h1 { font-size: 1.45rem; font-weight: 800; margin: 0; text-transform: uppercase; }
     h1 span { color: var(--strava); }
     .subtitle { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
-    h2 { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 12px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
+    h2 { font-size: 0.88rem; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 12px; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 14px; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 6px; }
     .stat-box { background: var(--card); border: 1px solid var(--border); border-top: 3px solid var(--strava); padding: 12px 10px; border-radius: 14px; text-align: center; }
     .stat-box.garmin { border-top-color: var(--garmin); }
+    .mini-stat { background: var(--card-inner); padding: 10px 6px; border-radius: 10px; text-align: center; border: 1px solid var(--border); }
+    .mini-val { font-size: 1.15rem; font-weight: 800; color: var(--garmin); }
+    .mini-lbl { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; margin-top: 2px; }
     .stat-val { font-size: 1.75rem; font-weight: 800; color: var(--text); }
     .stat-lbl { font-size: 0.72rem; color: var(--muted); margin-top: 4px; font-weight: 600; text-transform: uppercase; }
     .progress-wrap { margin-bottom: 14px; }
@@ -50,6 +55,7 @@
     textarea { width: 100%; background: var(--card-inner); color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: 12px; font-size: 0.92rem; resize: vertical; min-height: 85px; }
     .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 0.92rem; font-weight: 700; cursor: pointer; margin-top: 10px; }
     .btn-primary { background: var(--strava); color: #ffffff; }
+    .btn-obsidian { background: rgba(168, 85, 247, 0.16); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.4); font-size: 0.85rem; padding: 11px; }
     .btn-secondary { background: var(--card-inner); color: var(--muted); border: 1px solid var(--border); font-size: 0.82rem; padding: 10px; }
     .badge { font-size: 0.68rem; font-weight: 700; background: rgba(252, 76, 2, 0.18); color: var(--strava); padding: 3px 8px; border-radius: 6px; text-transform: uppercase; }
     .badge.garmin { background: rgba(0, 168, 232, 0.15); color: var(--garmin); }
@@ -64,9 +70,10 @@
       <h1>Hybrid <span>Coach</span></h1>
       <div class="subtitle">Marathon 4:30-4:45/km • Hyrox Sub 60</div>
     </div>
-    <span class="badge garmin">VO2max 52</span>
+    <span class="badge garmin" id="phase-badge">Woche 1 / 17</span>
   </div>
 
+  <!-- Countdowns -->
   <div class="grid-2">
     <div class="stat-box">
       <div class="stat-val" id="days-marathon">--</div>
@@ -78,8 +85,9 @@
     </div>
   </div>
 
+  <!-- Trainingsplan -->
   <div class="card">
-    <h2>Trainingsplan <span class="badge">KW 47</span></h2>
+    <h2>Trainingsplan <span class="badge" id="kw-badge">KW --</span></h2>
     <div class="progress-wrap">
       <div class="progress-header">
         <span>Wochenfortschritt</span>
@@ -93,16 +101,41 @@
     <button class="btn btn-secondary" onclick="toggleEditPlan()">Plan bearbeiten / KI-Update einfügen</button>
     <div id="edit-plan-box" style="display:none; margin-top:10px;">
       <textarea id="plan-input" placeholder="Jede Einheit in eine neue Zeile schreiben..."></textarea>
-      <button class="btn btn-primary" onclick="saveNewPlan()">Neuen Plan speichern</button>
+      <button class="btn btn-primary" onclick="saveNewPlan()">Neuen Plan speichern & Woche starten</button>
     </div>
   </div>
 
+  <!-- Garmin Auto-Sync Anzeige -->
+  <div class="card">
+    <h2>Garmin Auto-Sync <span class="badge garmin" id="garmin-status-badge">Live geladen</span></h2>
+    <div class="grid-3">
+      <div class="mini-stat">
+        <div class="mini-val" id="g-km">0 km</div>
+        <div class="mini-lbl">Wochen-km</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-val" id="g-runs">0</div>
+        <div class="mini-lbl">Läufe</div>
+      </div>
+      <div class="mini-stat">
+        <div class="mini-val" id="g-workouts">0</div>
+        <div class="mini-lbl">Sonstige</div>
+      </div>
+    </div>
+    <div id="garmin-list" style="font-size: 0.78rem; color: var(--muted); margin-top: 10px; border-top: 1px solid var(--border); padding-top: 8px;">
+      Lade Garmin-Daten...
+    </div>
+  </div>
+
+  <!-- Athleten-Log & Export -->
   <div class="card">
     <h2>Athleten-Log <span class="badge">iPhone Mikrofon</span></h2>
     <textarea id="feedback-note" placeholder="Tippe hier und nutze das Mikrofon auf deiner iPhone-Tastatur..."></textarea>
-    <button class="btn btn-primary" onclick="copyForAI()">Für KI-Coach kopieren (Prompt + Status)</button>
+    <button class="btn btn-primary" onclick="copyForAI()">Für KI-Coach kopieren (Prompt + Garmin)</button>
+    <button class="btn btn-obsidian" onclick="copyForObsidian()">Als Markdown für Obsidian kopieren</button>
   </div>
 
+  <!-- Garmin Zonen -->
   <div class="card">
     <h2>Garmin Pace-Zonen <span class="badge garmin">Schwelle 4:43/km</span></h2>
     <div class="zone-row"><span>Z2 Locker / Jogger</span><strong>5:35 - 6:15 /km (&lt;148 bpm)</strong></div>
@@ -111,7 +144,7 @@
     <div class="zone-row z-vo2"><span>VO2max / Hyrox</span><strong>4:05 - 4:20 /km (&gt;177 bpm)</strong></div>
   </div>
 
-  <div class="toast" id="toast">Kopiert! Jetzt in Claude/Gemini einfügen.</div>
+  <div class="toast" id="toast">Kopiert!</div>
 
   <script>
     const defaultTasks = [
@@ -126,14 +159,29 @@
       note: ""
     };
 
-    function updateCountdowns() {
+    let garminData = null;
+
+    function getWeekNumber(d) {
+      d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    }
+
+    function updateDates() {
       const now = new Date();
+      const startCycle = new Date('2026-11-16T00:00:00');
       const marathon = new Date('2027-03-14T09:00:00');
       const hyrox = new Date('2027-04-08T09:00:00');
+
       const dM = Math.max(0, Math.ceil((marathon - now) / (1000 * 60 * 60 * 24)));
       const dH = Math.max(0, Math.ceil((hyrox - now) / (1000 * 60 * 60 * 24)));
+      const currentWeekNum = Math.max(1, Math.min(17, Math.floor((now - startCycle) / (1000 * 60 * 60 * 24 * 7)) + 1));
+
       document.getElementById('days-marathon').innerText = dM;
       document.getElementById('days-hyrox').innerText = dH;
+      document.getElementById('kw-badge').innerText = 'KW ' + getWeekNumber(now);
+      document.getElementById('phase-badge').innerText = 'Woche ' + currentWeekNum + ' / 17';
     }
 
     function updateProgress() {
@@ -163,6 +211,31 @@
         list.appendChild(div);
       });
       updateProgress();
+    }
+
+    // Garmin JSON vom Server laden
+    async function loadGarminData() {
+      try {
+        const response = await fetch('garmin_data.json?t=' + new Date().getTime());
+        if (response.ok) {
+          garminData = await response.json();
+          document.getElementById('g-km').innerText = garminData.total_km + ' km';
+          document.getElementById('g-runs').innerText = garminData.run_count;
+          document.getElementById('g-workouts').innerText = garminData.workout_count;
+          
+          if (garminData.activities && garminData.activities.length > 0) {
+            const listHtml = garminData.activities.map(a => 
+              `<div>• ${a.date}: <strong>${a.name}</strong> (${a.km} km, Pace ${a.pace}, Puls Ø ${a.hr})</div>`
+            ).join('');
+            document.getElementById('garmin-list').innerHTML = listHtml;
+          } else {
+            document.getElementById('garmin-list').innerHTML = 'Keine Aktivitäten in den letzten 7 Tagen.';
+          }
+          document.getElementById('garmin-status-badge').innerText = 'Stand: ' + garminData.last_updated;
+        }
+      } catch (e) {
+        document.getElementById('garmin-list').innerHTML = 'Garmin-Daten konnten nicht geladen werden.';
+      }
     }
 
     function saveState() {
@@ -200,17 +273,44 @@
     function copyForAI() {
       saveState();
       const tasksSummary = state.tasks.map(t => '- [' + (t.done ? 'x' : ' ') + '] ' + t.text).join('\n');
-      const promptText = '# ROLLE & ZIEL\nDu bist mein pragmatischer Ausdauer- & Hybrid-Coach.\n- Ziel 1: Marathon am 14.03. (Pace 4:30-4:45/km)\n- Ziel 2: Hyrox Double am 08.04. (Sub 60 Min.)\n- Alltag: Elternteil, 3-4 Einheiten/Woche (3x morgens 60 Min. vor Arbeit, Mo=CrossFit USC Köln, WE=Long Run, optional abends Jogger-Buggy).\n- Garmin-Basis: VO2max 52, Laktatschwelle 4:43/km @ 175 bpm.\n\n# AKTUELLER STATUS & WOCHENPLAN\n' + tasksSummary + '\n\n# MEIN AKTUELLES FEEDBACK / LOG\n' + (state.note || "Keine besonderen Vorkommnisse.") + '\n\n# AUFGABE\nAnalysiere meinen Status kurz und pragmatisch (kein Schuldgefühl-Coaching). Passe bei Bedarf die restliche Woche an oder gib mir den Plan für nächste Woche als einfache Liste (eine Einheit pro Zeile, damit ich sie direkt in meine App kopieren kann).';
+      
+      let garminText = '';
+      if (garminData) {
+        const acts = garminData.activities.map(a => `  - ${a.date}: ${a.name} (${a.km} km, Pace ${a.pace}, HR ${a.hr})`).join('\n');
+        garminText = `\n# GARMIN AUTO-SYNC (LETZTE 7 TAGE)\n- Gesamtkilometer: ${garminData.total_km} km (${garminData.run_count} Läufe, ${garminData.workout_count} sonstige)\n- Letzte Einheiten:\n${acts}\n`;
+      }
+
+      const promptText = '# ROLLE & ZIEL\nDu bist mein pragmatischer Ausdauer- & Hybrid-Coach.\n- Ziel 1: Marathon am 14.03. (Pace 4:30-4:45/km)\n- Ziel 2: Hyrox Double am 08.04. (Sub 60 Min.)\n- Alltag: Elternteil, 3-4 Einheiten/Woche (3x morgens 60 Min. vor Arbeit, Mo=CrossFit USC Köln, WE=Long Run, optional abends Jogger-Buggy).\n- Garmin-Basis: VO2max 52, Laktatschwelle 4:43/km @ 175 bpm.\n\n# AKTUELLER STATUS & WOCHENPLAN\n' + tasksSummary + garminText + '\n# MEIN AKTUELLES FEEDBACK / LOG\n' + (state.note || "Keine besonderen Vorkommnisse.") + '\n\n# AUFGABE\nAnalysiere meinen Status kurz und pragmatisch (kein Schuldgefühl-Coaching). Passe bei Bedarf die restliche Woche an oder gib mir den Plan für nächste Woche als einfache Liste (eine Einheit pro Zeile, damit ich sie direkt in meine App kopieren kann).';
 
       navigator.clipboard.writeText(promptText).then(() => {
-        showToast("Kopiert! Jetzt in Claude/Gemini einfügen.");
+        showToast("Für KI-Coach kopiert!");
+      });
+    }
+
+    function copyForObsidian() {
+      saveState();
+      const today = new Date().toLocaleDateString('de-DE');
+      const kw = document.getElementById('kw-badge').innerText;
+      const phase = document.getElementById('phase-badge').innerText;
+      const tasksSummary = state.tasks.map(t => '- [' + (t.done ? 'x' : ' ') + '] ' + t.text).join('\n');
+      
+      let garminMd = '';
+      if (garminData) {
+        garminMd = `- **Garmin Auto-Sync:** ${garminData.total_km} km in ${garminData.run_count} Läufen\n`;
+      }
+
+      const mdText = `## Check-in ${kw} (${phase} – Stand: ${today})\n### Erledigte Einheiten\n${tasksSummary}\n\n### Daten & Gefühl\n${garminMd}- **Notiz:** ${state.note || "Keine Notiz hinterlegt."}\n---`;
+
+      navigator.clipboard.writeText(mdText).then(() => {
+        showToast("Obsidian-Markdown kopiert!");
       });
     }
 
     document.getElementById('feedback-note').value = state.note || "";
     document.getElementById('feedback-note').addEventListener('input', saveState);
-    updateCountdowns();
+    updateDates();
     renderTasks();
+    loadGarminData();
   </script>
 </body>
 </html>
