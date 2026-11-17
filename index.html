@@ -96,7 +96,7 @@
       </div>
     </div>
     <div id="task-list"></div>
-    <button class="btn btn-secondary" onclick="toggleEditPlan()" style="margin-top: 12px;">Plan bearbeiten / KI-Update einfügen</button>
+    <button class="btn btn-secondary" onclick="toggleEditPlan()" style="margin-top: 12px;">Plan bearbeiten / Claude-Update einfügen</button>
     <div id="edit-plan-box" style="display:none; margin-top:10px;">
       <textarea id="plan-input" placeholder="Jede Einheit in eine neue Zeile schreiben..."></textarea>
       <button class="btn btn-primary" onclick="saveNewPlan()">Neuen Plan speichern & Woche starten</button>
@@ -129,8 +129,8 @@
   <div class="card">
     <h2>Athleten-Log <span class="badge">iPhone Mikrofon</span></h2>
     <textarea id="feedback-note" placeholder="Tippe hier und nutze das Mikrofon auf deiner iPhone-Tastatur..."></textarea>
-    <button class="btn btn-primary" onclick="copyForAI()">Für KI-Coach kopieren (Prompt + Garmin)</button>
-    <a href="https://chatgpt.com" target="_blank" class="btn btn-secondary" style="margin-top: 8px;">KI-Chat im Browser öffnen</a>
+    <button class="btn btn-primary" onclick="copyForAI()">Für Claude kopieren (Prompt + Garmin)</button>
+    <a href="https://claude.ai/chat/644b4ea5-59e1-4e1c-b426-f161ffccd9ac" target="_blank" class="btn btn-secondary" style="margin-top: 8px;">Direkt in den Claude-Trainings-Chat</a>
   </div>
 
   <!-- Garmin Zonen -->
@@ -198,3 +198,79 @@
         div.className = 'task' + (t.done ? ' done' : '');
         div.innerHTML = '<input type="checkbox" ' + (t.done ? 'checked' : '') + '><span>' + t.text + '</span>';
         div.onclick = (e) => {
+          if (e.target.tagName !== 'INPUT') {
+            state.tasks[idx].done = !state.tasks[idx].done;
+          } else {
+            state.tasks[idx].done = e.target.checked;
+          }
+          saveState();
+          renderTasks();
+        };
+        list.appendChild(div);
+      });
+      updateProgress();
+    }
+
+    async function loadGarminData() {
+      try {
+        const response = await fetch('garmin_data.json?t=' + new Date().getTime());
+        if (response.ok) {
+          garminData = await response.json();
+          document.getElementById('g-km').innerText = garminData.total_km + ' km';
+          document.getElementById('g-runs').innerText = garminData.run_count;
+          document.getElementById('g-workouts').innerText = garminData.workout_count;
+          
+          if (garminData.activities && garminData.activities.length > 0) {
+            const listHtml = garminData.activities.map(a => 
+              `<div>• ${a.date}: <strong>${a.name}</strong> (${a.km} km, Pace ${a.pace}, Puls Ø ${a.hr})</div>`
+            ).join('');
+            document.getElementById('garmin-list').innerHTML = listHtml;
+          } else {
+            document.getElementById('garmin-list').innerHTML = 'Keine Aktivitäten in den letzten 7 Tagen.';
+          }
+          document.getElementById('garmin-status-badge').innerText = 'Stand: ' + garminData.last_updated;
+        }
+      } catch (e) {
+        document.getElementById('garmin-list').innerHTML = 'Garmin-Daten konnten nicht geladen werden.';
+      }
+    }
+
+    function saveState() {
+      state.note = document.getElementById('feedback-note').value;
+      localStorage.setItem('hybridCoachState', JSON.stringify(state));
+    }
+
+    function toggleEditPlan() {
+      const box = document.getElementById('edit-plan-box');
+      const isHidden = box.style.display === 'none';
+      box.style.display = isHidden ? 'block' : 'none';
+      if (isHidden) {
+        document.getElementById('plan-input').value = state.tasks.map(t => t.text).join('\n');
+      }
+    }
+
+    function saveNewPlan() {
+      const lines = document.getElementById('plan-input').value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      if (lines.length > 0) {
+        state.tasks = lines.map(line => ({ text: line, done: false }));
+        saveState();
+        renderTasks();
+        document.getElementById('edit-plan-box').style.display = 'none';
+        showToast("Neuer Wochenplan gespeichert!");
+      }
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    function copyForAI() {
+      saveState();
+      const tasksSummary = state.tasks.map(t => '- [' + (t.done ? 'x' : ' ') + '] ' + t.text).join('\n');
+      
+      let garminText = '';
+      if (garminData) {
+        const acts = garminData.
