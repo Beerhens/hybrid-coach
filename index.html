@@ -167,7 +167,6 @@
       note: ""
     };
 
-    // Automatischer Wochen-Reset, falls eine neue KW begonnen hat
     if (state.week !== currentKW) {
       state.week = currentKW;
       state.tasks = state.tasks.map(t => ({ ...t, done: false }));
@@ -205,4 +204,100 @@
       list.innerHTML = '';
       state.tasks.forEach((t, idx) => {
         const div = document.createElement('div');
-        div.className = 'task' + (t.done
+        div.className = 'task' + (t.done ? ' done' : '');
+        div.innerHTML = '<input type="checkbox" ' + (t.done ? 'checked' : '') + '><span>' + t.text + '</span>';
+        div.onclick = (e) => {
+          if (e.target.tagName !== 'INPUT') {
+            state.tasks[idx].done = !state.tasks[idx].done;
+          } else {
+            state.tasks[idx].done = e.target.checked;
+          }
+          saveState();
+          renderTasks();
+        };
+        list.appendChild(div);
+      });
+      updateProgress();
+    }
+
+    async function loadGarminData() {
+      try {
+        const response = await fetch('garmin_data.json?t=' + new Date().getTime());
+        if (response.ok) {
+          garminData = await response.json();
+          document.getElementById('g-km').innerText = garminData.total_km + ' km';
+          document.getElementById('g-runs').innerText = garminData.run_count;
+          document.getElementById('g-workouts').innerText = garminData.workout_count;
+          
+          if (garminData.activities && garminData.activities.length > 0) {
+            const listHtml = garminData.activities.map(a => 
+              `<div>• ${a.date}: <strong>${a.name}</strong> (${a.km} km, Pace ${a.pace}, Puls Ø ${a.hr})</div>`
+            ).join('');
+            document.getElementById('garmin-list').innerHTML = listHtml;
+          } else {
+            document.getElementById('garmin-list').innerHTML = 'Keine Aktivitäten in den letzten 7 Tagen.';
+          }
+          document.getElementById('garmin-status-badge').innerText = 'Stand: ' + garminData.last_updated;
+        }
+      } catch (e) {
+        document.getElementById('garmin-list').innerHTML = 'Garmin-Daten konnten nicht geladen werden.';
+      }
+    }
+
+    function saveState() {
+      state.note = document.getElementById('feedback-note').value;
+      localStorage.setItem('hybridCoachState', JSON.stringify(state));
+    }
+
+    function toggleEditPlan() {
+      const box = document.getElementById('edit-plan-box');
+      const isHidden = box.style.display === 'none';
+      box.style.display = isHidden ? 'block' : 'none';
+      if (isHidden) {
+        document.getElementById('plan-input').value = state.tasks.map(t => t.text).join('\n');
+      }
+    }
+
+    function saveNewPlan() {
+      const lines = document.getElementById('plan-input').value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      if (lines.length > 0) {
+        state.tasks = lines.map(line => ({ text: line, done: false }));
+        saveState();
+        renderTasks();
+        document.getElementById('edit-plan-box').style.display = 'none';
+        showToast("Neuer Wochenplan gespeichert!");
+      }
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    function copyForAI() {
+      saveState();
+      const tasksSummary = state.tasks.map(t => '- [' + (t.done ? 'x' : ' ') + '] ' + t.text).join('\n');
+      
+      let garminText = '';
+      if (garminData) {
+        const acts = garminData.activities.map(a => `  - ${a.date}: ${a.name} (${a.km} km, Pace ${a.pace}, HR ${a.hr})`).join('\n');
+        garminText = `\n# GARMIN AUTO-SYNC (LETZTE 7 TAGE)\n- Gesamtkilometer: ${garminData.total_km} km (${garminData.run_count} Läufe, ${garminData.workout_count} sonstige)\n- Letzte Einheiten:\n${acts}\n`;
+      }
+
+      const promptText = '# ROLLE & ZIEL\nDu bist mein pragmatischer Ausdauer- & Hybrid-Coach (Claude).\n- Ziel 1: Marathon am 14.03. (Pace 4:30-4:45/km)\n- Ziel 2: Hyrox Double am 08.04. (Sub 60 Min.)\n- Alltag: Elternteil, 3-4 Einheiten/Woche (3x morgens 60 Min. vor Arbeit, Mo=CrossFit USC Köln, WE=Long Run, optional abends Jogger-Buggy).\n- Garmin-Basis: VO2max 52, Laktatschwelle 4:43/km @ 175 bpm.\n\n# AKTUELLER STATUS & WOCHENPLAN\n' + tasksSummary + garminText + '\n# MEIN AKTUELLES FEEDBACK / LOG\n' + (state.note || "Keine besonderen Vorkommnisse.") + '\n\n# AUFGABE\nAnalysiere meinen Status kurz und pragmatisch (kein Schuldgefühl-Coaching). Passe bei Bedarf die restliche Woche an oder gib mir den Plan für nächste Woche als einfache Liste (eine Einheit pro Zeile, damit ich sie direkt in meine App kopieren kann).';
+
+      navigator.clipboard.writeText(promptText).then(() => {
+        showToast("Für Claude kopiert!");
+      });
+    }
+
+    document.getElementById('feedback-note').value = state.note || "";
+    document.getElementById('feedback-note').addEventListener('input', saveState);
+    updateDates();
+    renderTasks();
+    loadGarminData();
+  </script>
+</body>
+</html>
