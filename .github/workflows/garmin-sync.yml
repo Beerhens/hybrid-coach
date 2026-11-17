@@ -1,0 +1,38 @@
+name: Garmin Auto-Sync
+
+on:
+  schedule:
+    - cron: '30 4 * * *' # Läuft täglich um 05:30 Uhr deutscher Zeit
+  workflow_dispatch:     # Ermöglicht dir auch manuellen Start per Button
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository laden
+        uses: actions/checkout@v4
+
+      - name: Python einrichten
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Garmin-Bibliothek installieren
+        run: pip install garminconnect
+
+      - name: Daten von Garmin abrufen
+        env:
+          GARMIN_EMAIL: ${{ secrets.GARMIN_EMAIL }}
+          GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
+        run: python sync_garmin.py
+
+      - name: Neue Daten speichern
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "Garmin Sync Bot"
+          git add garmin_data.json
+          git commit -m "Update Garmin data" || exit 0
+          git push
