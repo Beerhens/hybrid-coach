@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Hybrid Coach">
+  <title>Hybrid Coach – Marathon & Hyrox</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --green: #22c55e;
+      --orange: #f59e0b;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { margin: 0; padding: 16px 16px 40px; background: var(--bg); color: var(--text); line-height: 1.45; }
+    h1 { font-size: 1.4rem; margin: 0 0 4px; }
+    h2 { font-size: 1.05rem; margin: 0 0 10px; color: var(--accent); display: flex; justify-content: space-between; align-items: center; }
+    .subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 16px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 14px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-box { background: rgba(15, 23, 42, 0.6); padding: 10px; border-radius: 10px; text-align: center; }
+    .stat-val { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+    .stat-lbl { font-size: 0.75rem; color: var(--muted); }
+    .task { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+    .task:last-child { border-bottom: none; padding-bottom: 0; }
+    .task input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--green); margin-top: 2px; flex-shrink: 0; }
+    .task.done span { text-decoration: line-through; color: var(--muted); }
+    .zone-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 5px 0; border-bottom: 1px solid rgba(51,65,85,0.5); }
+    .zone-row:last-child { border-bottom: none; }
+    textarea { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px; font-size: 0.95rem; resize: vertical; min-height: 85px; }
+    .btn { width: 100%; padding: 13px; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-top: 8px; transition: opacity 0.2s; }
+    .btn:active { opacity: 0.8; }
+    .btn-primary { background: var(--accent); color: #0f172a; }
+    .btn-secondary { background: var(--border); color: var(--text); font-size: 0.85rem; padding: 10px; }
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--green); color: #052e16; font-weight: 600; padding: 10px 18px; border-radius: 20px; font-size: 0.85rem; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 99; }
+    .toast.show { opacity: 1; }
+    .badge { font-size: 0.7rem; background: rgba(56, 189, 248, 0.15); color: var(--accent); padding: 3px 8px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+
+  <h1>Hybrid Coach</h1>
+  <div class="subtitle">Marathon (4:30–4:45/km) & Hyrox Double (Sub 60)</div>
+
+  <!-- Countdown -->
+  <div class="card grid-2">
+    <div class="stat-box">
+      <div class="stat-val" id="days-marathon">--</div>
+      <div class="stat-lbl">Tage bis Marathon (14.03.)</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val" id="days-hyrox" style="color: var(--orange);">--</div>
+      <div class="stat-lbl">Tage bis Hyrox (08.04.)</div>
+    </div>
+  </div>
+
+  <!-- Aktueller Wochenplan -->
+  <div class="card">
+    <h2>Aktuelle Woche <span class="badge" id="week-label">KW 47</span></h2>
+    <div id="task-list"></div>
+    <button class="btn btn-secondary" onclick="toggleEditPlan()">Wochenplan bearbeiten / KI-Update einfügen</button>
+    <div id="edit-plan-box" style="display:none; margin-top:10px;">
+      <textarea id="plan-input" placeholder="Jede Einheit in eine neue Zeile schreiben..."></textarea>
+      <button class="btn btn-primary" onclick="saveNewPlan()">Neuen Plan speichern</button>
+    </div>
+  </div>
+
+  <!-- Audio / Text Log -->
+  <div class="card">
+    <h2>Schnell-Log & Feedback <span class="badge">iPhone Mikrofon nutzen</span></h2>
+    <textarea id="feedback-note" placeholder="Tippe hier und nutze das Mikrofon unten rechts auf deiner iPhone-Tastatur: Wie lief das Training? Müde? Plan anpassen?"></textarea>
+    <button class="btn btn-primary" onclick="copyForAI()">Für KI-Coach kopieren (Prompt + Status)</button>
+  </div>
+
+  <!-- Garmin Zonen -->
+  <div class="card">
+    <h2>Deine Garmin-Zonen <span class="badge">Schwelle 4:43/km</span></h2>
+    <div class="zone-row"><span>Locker / Jogger-Buggy</span><strong>5:35 – 6:15 /km (&lt;148 bpm)</strong></div>
+    <div class="zone-row"><span>Marathon-Zielpace</span><strong>4:40 – 4:45 /km (158–166 bpm)</strong></div>
+    <div class="zone-row"><span>Laktatschwelle (Tempo)</span><strong>4:30 – 4:42 /km (170–176 bpm)</strong></div>
+    <div class="zone-row"><span>VO₂max / Hyrox-Intervalle</span><strong>4:05 – 4:20 /km (&gt;177 bpm)</strong></div>
+  </div>
+
+  <div class="toast" id="toast">Kopiert! Jetzt in Claude/Gemini einfügen.</div>
+
+  <script>
+    const defaultTasks = [
+      { text: "Mo (morgens): CrossFit (USC) – Technik & Kraft, Beine moderat", done: false },
+      { text: "Mi/Do (morgens): 15' Einlaufen + 3x8' Schwelle (4:35–4:43/km) + 10' Auslaufen", done: false },
+      { text: "Fr (optional): 35–45' locker / Jogger-Buggy (<145 bpm)", done: false },
+      { text: "Sa/So: Long Run 15–16 km @ 5:45–6:05/km (<150 bpm)", done: false }
+    ];
+
+    let state = JSON.parse(localStorage.getItem('hybridCoachState')) || {
+      tasks: defaultTasks,
+      note: ""
+    };
+
+    function updateCountdowns() {
+      const now = new Date();
+      const marathon = new Date('2027-03-14T09:00:00');
+      const hyrox = new Date('2027-04-08T09:00:00');
+      const dM = Math.max(0, Math.ceil((marathon - now) / (1000 * 60 * 60 * 24)));
+      const dH = Math.max(0, Math.ceil((hyrox - now) / (1000 * 60 * 60 * 24)));
+      document.getElementById('days-marathon').innerText = dM;
+      document.getElementById('days-hyrox').innerText = dH;
+    }
+
+    function renderTasks() {
+      const list = document.getElementById('task-list');
+      list.innerHTML = '';
+      state.tasks.forEach((t, idx) => {
+        const div = document.createElement('div');
+        div.className = 'task' + (t.done ? ' done' : '');
+        div.innerHTML = `<input type="checkbox" ${t.done ? 'checked' : ''}><span>${t.text}</span>`;
+        div.onclick = (e) => {
+          if (e.target.tagName !== 'INPUT') {
+            state.tasks[idx].done = !state.tasks[idx].done;
+          } else {
+            state.tasks[idx].done = e.target.checked;
+          }
+          saveState();
+          renderTasks();
+        };
+        list.appendChild(div);
+      });
+    }
+
+    function saveState() {
+      state.note = document.getElementById('feedback-note').value;
+      localStorage.setItem('hybridCoachState', JSON.stringify(state));
+    }
+
+    function toggleEditPlan() {
+      const box = document.getElementById('edit-plan-box');
+      const isHidden = box.style.display === 'none';
+      box.style.display = isHidden ? 'block' : 'none';
+      if (isHidden) {
+        document.getElementById('plan-input').value = state.tasks.map(t => t.text).join('\n');
+      }
+    }
+
+    function saveNewPlan() {
+      const lines = document.getElementById('plan-input').value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      if (lines.length > 0) {
+        state.tasks = lines.map(line => ({ text: line, done: false }));
+        saveState();
+        renderTasks();
+        document.getElementById('edit-plan-box').style.display = 'none';
+        showToast("Neuer Wochenplan gespeichert!");
+      }
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    function copyForAI() {
+      saveState();
+      const tasksSummary = state.tasks.map(t => `- [${t.done ? 'x' : ' '}] ${t.text}`).join('\n');
+      const promptText = `# ROLLE & ZIEL
+Du bist mein pragmatischer Ausdauer- & Hybrid-Coach.
+- Ziel 1: Marathon am 14.03. (Pace 4:30-4:45/km)
+- Ziel 2: Hyrox Double am 08.04. (Sub 60 Min.)
+- Alltag: Elternteil, 3-4 Einheiten/Woche (3x morgens 60 Min. vor Arbeit, Mo=CrossFit USC Köln, WE=Long Run, optional abends Jogger-Buggy).
+- Garmin-Basis: VO2max 52, Laktatschwelle 4:43/km @ 175 bpm.
+
+# AKTUELLER STATUS & WOCHENPLAN
+${tasksSummary}
+
+# MEIN AKTUELLES FEEDBACK / LOG
+${state.note || "Keine besonderen Vorkommnisse."}
+
+# AUFGABE
+Analysiere meinen Status kurz und pragmatisch (kein Schuldgefühl-Coaching). Passe bei Bedarf die restliche Woche an oder gib mir den Plan für nächste Woche als einfache Liste (eine Einheit pro Zeile, damit ich sie direkt in meine App kopieren kann).`;
+
+      navigator.clipboard.writeText(promptText).then(() => {
+        showToast("Kopiert! Jetzt in Claude/Gemini einfügen.");
+      });
+    }
+
+    document.getElementById('feedback-note').value = state.note || "";
+    document.getElementById('feedback-note').addEventListener('input', saveState);
+    updateCountdowns();
+    renderTasks();
+  </script>
+</body>
+</html>
