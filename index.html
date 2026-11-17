@@ -152,19 +152,29 @@
       { text: "Sa/So: Long Run 15-16 km @ 5:45-6:05/km (<150 bpm)", done: false }
     ];
 
-    let state = JSON.parse(localStorage.getItem('hybridCoachState')) || {
-      tasks: defaultTasks,
-      note: ""
-    };
-
-    let garminData = null;
-
     function getWeekNumber(d) {
       d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
       d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
       const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
       return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
     }
+
+    const currentKW = getWeekNumber(new Date());
+
+    let state = JSON.parse(localStorage.getItem('hybridCoachState')) || {
+      week: currentKW,
+      tasks: defaultTasks,
+      note: ""
+    };
+
+    // Automatischer Wochen-Reset, falls eine neue KW begonnen hat
+    if (state.week !== currentKW) {
+      state.week = currentKW;
+      state.tasks = state.tasks.map(t => ({ ...t, done: false }));
+      localStorage.setItem('hybridCoachState', JSON.stringify(state));
+    }
+
+    let garminData = null;
 
     function updateDates() {
       const now = new Date();
@@ -178,7 +188,7 @@
 
       document.getElementById('days-marathon').innerText = dM;
       document.getElementById('days-hyrox').innerText = dH;
-      document.getElementById('kw-badge').innerText = 'KW ' + getWeekNumber(now);
+      document.getElementById('kw-badge').innerText = 'KW ' + currentKW;
       document.getElementById('phase-badge').innerText = 'Woche ' + currentWeekNum + ' / 17';
     }
 
@@ -195,82 +205,4 @@
       list.innerHTML = '';
       state.tasks.forEach((t, idx) => {
         const div = document.createElement('div');
-        div.className = 'task' + (t.done ? ' done' : '');
-        div.innerHTML = '<input type="checkbox" ' + (t.done ? 'checked' : '') + '><span>' + t.text + '</span>';
-        div.onclick = (e) => {
-          if (e.target.tagName !== 'INPUT') {
-            state.tasks[idx].done = !state.tasks[idx].done;
-          } else {
-            state.tasks[idx].done = e.target.checked;
-          }
-          saveState();
-          renderTasks();
-        };
-        list.appendChild(div);
-      });
-      updateProgress();
-    }
-
-    async function loadGarminData() {
-      try {
-        const response = await fetch('garmin_data.json?t=' + new Date().getTime());
-        if (response.ok) {
-          garminData = await response.json();
-          document.getElementById('g-km').innerText = garminData.total_km + ' km';
-          document.getElementById('g-runs').innerText = garminData.run_count;
-          document.getElementById('g-workouts').innerText = garminData.workout_count;
-          
-          if (garminData.activities && garminData.activities.length > 0) {
-            const listHtml = garminData.activities.map(a => 
-              `<div>• ${a.date}: <strong>${a.name}</strong> (${a.km} km, Pace ${a.pace}, Puls Ø ${a.hr})</div>`
-            ).join('');
-            document.getElementById('garmin-list').innerHTML = listHtml;
-          } else {
-            document.getElementById('garmin-list').innerHTML = 'Keine Aktivitäten in den letzten 7 Tagen.';
-          }
-          document.getElementById('garmin-status-badge').innerText = 'Stand: ' + garminData.last_updated;
-        }
-      } catch (e) {
-        document.getElementById('garmin-list').innerHTML = 'Garmin-Daten konnten nicht geladen werden.';
-      }
-    }
-
-    function saveState() {
-      state.note = document.getElementById('feedback-note').value;
-      localStorage.setItem('hybridCoachState', JSON.stringify(state));
-    }
-
-    function toggleEditPlan() {
-      const box = document.getElementById('edit-plan-box');
-      const isHidden = box.style.display === 'none';
-      box.style.display = isHidden ? 'block' : 'none';
-      if (isHidden) {
-        document.getElementById('plan-input').value = state.tasks.map(t => t.text).join('\n');
-      }
-    }
-
-    function saveNewPlan() {
-      const lines = document.getElementById('plan-input').value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-      if (lines.length > 0) {
-        state.tasks = lines.map(line => ({ text: line, done: false }));
-        saveState();
-        renderTasks();
-        document.getElementById('edit-plan-box').style.display = 'none';
-        showToast("Neuer Wochenplan gespeichert!");
-      }
-    }
-
-    function showToast(msg) {
-      const t = document.getElementById('toast');
-      t.innerText = msg;
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2800);
-    }
-
-    function copyForAI() {
-      saveState();
-      const tasksSummary = state.tasks.map(t => '- [' + (t.done ? 'x' : ' ') + '] ' + t.text).join('\n');
-      
-      let garminText = '';
-      if (garminData) {
-        const acts = garminData.
+        div.className = 'task' + (t.done
