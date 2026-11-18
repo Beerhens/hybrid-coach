@@ -18,9 +18,7 @@
       --blue: #2563eb;
       --blue-grad: linear-gradient(135deg, #3b82f6, #1d4ed8);
       --lime: #84cc16;
-      --lime-bg: #ecfccb;
       --yellow: #f59e0b;
-      --yellow-bg: #fef3c7;
       --purple: #6366f1;
       --border: #e2e8f0;
       --shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
@@ -51,7 +49,7 @@
     /* Bento Grid 2 Columns */
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
     
-    /* Bunte Countdown Cards (wie Sleep & Drink in Vorlage) */
+    /* Bunte Countdown Cards */
     .color-card { border-radius: 22px; padding: 16px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
     .color-card.lime { background: linear-gradient(135deg, #a3e635, #65a30d); color: #ffffff; }
     .color-card.amber { background: linear-gradient(135deg, #fbbf24, #d97706); color: #ffffff; }
@@ -99,12 +97,19 @@
     .ms-val { font-size: 1.05rem; font-weight: 800; color: var(--blue); }
     .ms-lbl { font-size: 0.65rem; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-top: 2px; }
 
-    /* Blue Race & Pacing Card (wie Running Challenge in Vorlage) */
+    /* Blue Race & Pacing Card */
     .blue-card { background: var(--blue-grad); color: #ffffff; border-radius: 22px; padding: 18px; margin-bottom: 14px; box-shadow: 0 12px 28px rgba(37, 99, 235, 0.22); }
     .blue-card h3 { margin: 0 0 10px; font-size: 1rem; font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
     .pace-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .pace-pill { background: rgba(255,255,255,0.16); padding: 9px 11px; border-radius: 12px; font-size: 0.78rem; }
     .pace-pill strong { display: block; font-size: 0.95rem; margin-top: 2px; }
+
+    /* Hyrox Stationen Accordion */
+    .hyrox-toggle { width: 100%; background: rgba(255,255,255,0.2); border: none; color: #ffffff; padding: 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; cursor: pointer; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .hyrox-table { margin-top: 10px; background: rgba(0,0,0,0.18); border-radius: 12px; padding: 10px; font-size: 0.78rem; }
+    .hyrox-row { display: flex; justify-content: space-between; padding: 5px 2px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+    .hyrox-row:last-child { border-bottom: none; }
+    .hyrox-summary { margin-top: 8px; padding-top: 6px; border-top: 1px dashed rgba(255,255,255,0.35); font-size: 0.75rem; font-weight: 700; display: flex; justify-content: space-between; }
 
     /* Inputs & Buttons */
     textarea { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 14px; padding: 12px; font-size: 0.88rem; resize: vertical; min-height: 78px; }
@@ -144,7 +149,7 @@
     </div>
   </div>
 
-  <!-- Bunte Countdown Kacheln (Limette & Sonnengelb) -->
+  <!-- Bunte Countdown Kacheln -->
   <div class="grid-2">
     <div class="color-card lime">
       <div class="cc-icon">🏃</div>
@@ -223,14 +228,34 @@
     </div>
   </div>
 
-  <!-- Blaue Pacing & Ziel-Matrix Karte -->
+  <!-- Blaue Pacing & Hyrox Sub-60 Matrix Karte -->
   <div class="blue-card">
-    <h3>Pacing-Matrix <span style="font-size:0.72rem; background:rgba(255,255,255,0.2); padding:3px 9px; border-radius:99px;">On Track</span></h3>
+    <h3>Pacing & Sub-60 Plan <span style="font-size:0.72rem; background:rgba(255,255,255,0.2); padding:3px 9px; border-radius:99px;">On Track</span></h3>
     <div class="pace-grid">
       <div class="pace-pill">Marathon Race<strong>04:45 /km</strong></div>
-      <div class="pace-pill">Hyrox 1km Split<strong>04:15 - 04:20 /km</strong></div>
+      <div class="pace-pill">Hyrox 8x1km + Roxzone<strong>ca. 34:30 Min.</strong></div>
       <div class="pace-pill">Laktatschwelle<strong>04:30 - 04:42 /km</strong></div>
-      <div class="pace-pill">Z2 Basis / Buggy<strong>05:35 - 06:15 /km</strong></div>
+      <div class="pace-pill">Hyrox 8 Stationen<strong>ca. 24:30 Min.</strong></div>
+    </div>
+
+    <button class="hyrox-toggle" onclick="toggleHyroxSplits()">
+      <span>Hyrox Double Sub-60 Stationszeiten</span>
+      <span id="hyrox-arrow">▼</span>
+    </button>
+
+    <div class="hyrox-table" id="hyrox-splits" style="display: none;">
+      <div class="hyrox-row"><span>1. 1000m SkiErg</span><strong>03:45 – 03:55</strong></div>
+      <div class="hyrox-row"><span>2. 50m Sled Push</span><strong>01:45 – 02:10</strong></div>
+      <div class="hyrox-row"><span>3. 50m Sled Pull</span><strong>02:30 – 03:00</strong></div>
+      <div class="hyrox-row"><span>4. 80m Burpee Broad Jumps</span><strong>03:15 – 03:45</strong></div>
+      <div class="hyrox-row"><span>5. 1000m Row</span><strong>03:40 – 03:55</strong></div>
+      <div class="hyrox-row"><span>6. 200m Farmers Carry</span><strong>01:25 – 01:40</strong></div>
+      <div class="hyrox-row"><span>7. 100m Sandbag Lunges</span><strong>03:10 – 03:40</strong></div>
+      <div class="hyrox-row"><span>8. 100 Wall Balls</span><strong>03:30 – 04:00</strong></div>
+      <div class="hyrox-summary">
+        <span>8x 1km Laufen (Ø 04:10 + Roxzone)</span>
+        <span>~34:30 Min.</span>
+      </div>
     </div>
   </div>
 
@@ -278,6 +303,14 @@
 
     let garminData = null;
 
+    function toggleHyroxSplits() {
+      const box = document.getElementById('hyrox-splits');
+      const arrow = document.getElementById('hyrox-arrow');
+      const isHidden = box.style.display === 'none';
+      box.style.display = isHidden ? 'block' : 'none';
+      arrow.innerText = isHidden ? '▲' : '▼';
+    }
+
     function updateDates() {
       const now = new Date();
       const startCycle = new Date('2026-11-16T00:00:00');
@@ -313,7 +346,6 @@
       const doneCount = state.tasks.filter(t => t.done).length;
       const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
       
-      // Donut Ring SVG Berechnung (Umfang = 2 * pi * 28 ≈ 176)
       const circle = document.getElementById('donut-circle');
       const offset = 176 - (176 * pct) / 100;
       circle.style.strokeDashoffset = offset;
@@ -354,7 +386,7 @@
             if (parts.length >= 2) {
               const year = new Date().getFullYear();
               const d = new Date(year, parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
-              let dayIdx = d.getDay() - 1; // Mo=0 ... So=6
+              let dayIdx = d.getDay() - 1;
               if (dayIdx < 0) dayIdx = 6;
               kmPerDay[dayIdx] += parseFloat(a.km) || 0;
             }
@@ -381,7 +413,7 @@
     }
 
     async function loadGarminData() {
-      renderBarChart([]); // Initiales leeres Chart
+      renderBarChart([]);
       try {
         const response = await fetch('garmin_data.json?t=' + new Date().getTime());
         if (response.ok) {
@@ -448,7 +480,7 @@
         garminText = `\n# GARMIN AUTO-SYNC (LETZTE 7 TAGE)\n- Gesamtkilometer: ${garminData.total_km} km (${garminData.run_count} Läufe)\n- Letzte Einheiten:\n${acts}\n`;
       }
 
-      const promptText = '# ROLLE & ZIEL\nDu bist mein pragmatischer Ausdauer- & Hybrid-Coach (Claude).\n- Ziel 1: Marathon am 14.03. (Pace 04:45/km)\n- Ziel 2: Hyrox Double am 08.04. (Sub 60 Min.)\n- Alltag: Elternteil, 3-4 Einheiten/Woche (3x morgens 60 Min. vor Arbeit, Mo=CrossFit USC Köln, WE=Long Run).\n\n# AKTUELLER STATUS & WOCHENPLAN\n' + tasksSummary + garminText + '\n# MEIN AKTUELLES FEEDBACK / LOG\n' + (state.note || "Keine besonderen Vorkommnisse.") + '\n\n# AUFGABE\nAnalysiere, ob ich leistungsmäßig voll "On Track" für meine Ziele bin. Gib mir kurzes Feedback zur Belastung und passe bei Bedarf den Plan an.';
+      const promptText = '# ROLLE & ZIEL\nDu bist mein pragmatischer Ausdauer- & Hybrid-Coach (Claude).\n- Ziel 1: Marathon am 14.03. (Pace 04:45/km)\n- Ziel 2: Hyrox Double am 08.04. (Sub 60 Min. -> Laufen+Roxzone ~34:30 Min., Stationen ~24:30 Min.)\n- Alltag: Elternteil, 3-4 Einheiten/Woche (3x morgens 60 Min. vor Arbeit, Mo=CrossFit USC Köln, WE=Long Run).\n\n# AKTUELLER STATUS & WOCHENPLAN\n' + tasksSummary + garminText + '\n# MEIN AKTUELLES FEEDBACK / LOG\n' + (state.note || "Keine besonderen Vorkommnisse.") + '\n\n# AUFGABE\nAnalysiere, ob ich leistungsmäßig voll "On Track" für meine Ziele bin. Gib mir kurzes Feedback zur Belastung und passe bei Bedarf den Plan an.';
 
       navigator.clipboard.writeText(promptText).then(() => {
         showToast("Für Claude kopiert!");
