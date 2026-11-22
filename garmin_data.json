@@ -1,9 +1,16 @@
 {
-  "last_updated": "21.11.2026 05:20",
-  "total_km": 7.0,
-  "run_count": 1,
+  "last_updated": "22.11.2026 05:23",
+  "total_km": 16.7,
+  "run_count": 2,
   "workout_count": 2,
   "activities": [
+    {
+      "date": "2026-11-21",
+      "name": "Köln - Basis",
+      "km": 9.65,
+      "pace": "6:33/km",
+      "hr": 131
+    },
     {
       "date": "2026-11-19",
       "name": "Crosstrainer",
