@@ -1,9 +1,16 @@
 {
-  "last_updated": "25.11.2026 05:30",
-  "total_km": 28.9,
-  "run_count": 3,
+  "last_updated": "26.11.2026 05:30",
+  "total_km": 38.4,
+  "run_count": 4,
   "workout_count": 2,
   "activities": [
+    {
+      "date": "2026-11-25",
+      "name": "Köln Laufen",
+      "km": 9.54,
+      "pace": "6:02/km",
+      "hr": 141
+    },
     {
       "date": "2026-11-23",
       "name": "Köln Laufen",
