@@ -1,9 +1,16 @@
 {
-  "last_updated": "26.11.2026 05:30",
+  "last_updated": "27.11.2026 05:31",
   "total_km": 38.4,
   "run_count": 4,
   "workout_count": 2,
   "activities": [
+    {
+      "date": "2026-11-26",
+      "name": "Hyrox",
+      "km": 0.0,
+      "pace": "-",
+      "hr": 136
+    },
     {
       "date": "2026-11-25",
       "name": "Köln Laufen",
@@ -38,13 +45,6 @@
       "km": 9.65,
       "pace": "6:33/km",
       "hr": 131
-    },
-    {
-      "date": "2026-11-19",
-      "name": "Crosstrainer",
-      "km": 0.0,
-      "pace": "-",
-      "hr": 150
     }
   ]
 }
